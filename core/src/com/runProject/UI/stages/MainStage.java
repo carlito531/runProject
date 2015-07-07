@@ -36,6 +36,7 @@ public class MainStage extends Stage implements ContactListener {
 	    private float accumulator = 0f;
 
 	    private Rectangle screenRightSide;
+	    private Rectangle screenLeftSide;
 	    private Vector3 touchPoint;
 	    
 	    private OrthographicCamera camera;
@@ -54,6 +55,7 @@ public class MainStage extends Stage implements ContactListener {
 	    
 	    private void setupWorld() {
 	        world = worldLayout.createWorld();
+	        world.setContactListener(this);
 	        this.setupGround();
 	        this.setupRunner();
 	    }
@@ -77,6 +79,7 @@ public class MainStage extends Stage implements ContactListener {
 	    private void setupTouchControlAreas() {
 	        touchPoint = new Vector3();
 	        screenRightSide = new Rectangle(getCamera().viewportWidth / 2, 0, getCamera().viewportWidth / 2, getCamera().viewportHeight);
+	        screenLeftSide = new Rectangle(0, 0, getCamera().viewportWidth / 2, getCamera().viewportHeight);
 	        Gdx.input.setInputProcessor(this);
 	    }
 	    
@@ -85,17 +88,31 @@ public class MainStage extends Stage implements ContactListener {
 
 	    this.translateScreenToWorldCoordinates(x, y);
 
-	        if (rightSideTouched(touchPoint.x, touchPoint.y)) {
+		    if (rightSideTouched(touchPoint.x, touchPoint.y)) {
 	            runner.jump();
+	        } else if (leftSideTouched(touchPoint.x, touchPoint.y)) {
+	            runner.dodge();
 	        }
 	        return super.touchDown(x, y, pointer, button);
+	    }
+	    
+	    @Override
+	    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+
+	        if (runner.isDodging()) {
+	            runner.stopDodge();
+	        }
+	        return super.touchUp(screenX, screenY, pointer, button);
 	    }
 
 	    private boolean rightSideTouched(float x, float y) {
 	        return screenRightSide.contains(x, y);
 	    }
-
 	    
+	    private boolean leftSideTouched(float x, float y) {
+	        return screenLeftSide.contains(x, y);
+	    }
+   
 	    private void translateScreenToWorldCoordinates(int x, int y) {
 	        this.getCamera().unproject(touchPoint.set(x, y, 0));
 	    }
@@ -134,19 +151,13 @@ public class MainStage extends Stage implements ContactListener {
 
 		@Override
 		public void endContact(Contact contact) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public void preSolve(Contact contact, Manifold oldManifold) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public void postSolve(Contact contact, ContactImpulse impulse) {
-			// TODO Auto-generated method stub
-			
 		}
 }

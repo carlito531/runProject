@@ -4,4 +4,3 @@ public enum UserDataType {
 	GROUND,
 	RUNNER
 }
-
