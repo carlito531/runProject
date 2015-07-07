@@ -22,4 +22,10 @@ public class Constants {
     public static final float RUNNER_WIDTH = 1F;
     public static final float RUNNER_HEIGHT = 2F;
     public static float RUNNER_DENSITY = 0.5F;
+    
+    /* runner actions */
+    
+    // Jump
+    public static final float RUNNER_GRAVITY_SCALE = 3f;
+    public static final Vector2 RUNNER_JUMPING_LINEAR_IMPULSE = new Vector2(0, 13f);
 }

@@ -1,41 +1,71 @@
 package com.runProject.UI.stages;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.runProject.UI.world.BodyLayout;
 import com.runProject.UI.world.GroundLayout;
 import com.runProject.UI.world.RunnerLayout;
 import com.runProject.UI.world.WorldLayout;
+import com.runProject.model.Ground;
+import com.runProject.model.Runner;
 
-public class MainStage extends Stage {
+public class MainStage extends Stage implements ContactListener {
 	
 	 	private static final int VIEWPORT_WIDTH = 20;
 	    private static final int VIEWPORT_HEIGHT = 13;
 
 	    private World world;
-	    private Body ground;
-	    private Body runner;
+	    private Ground ground;
+	    private Runner runner;
+	    
+	    WorldLayout worldLayout = null;
+	    GroundLayout groundLayout = null;
+    	RunnerLayout runnerLayout = null;
 
 	    private final float TIME_STEP = 1 / 300f;
 	    private float accumulator = 0f;
 
+	    private Rectangle screenRightSide;
+	    private Vector3 touchPoint;
+	    
 	    private OrthographicCamera camera;
 	    private Box2DDebugRenderer renderer;
 
 	    public MainStage() {
+	    	worldLayout = new WorldLayout();
+	 	    groundLayout = new GroundLayout();
+	     	runnerLayout = new RunnerLayout();
 	    	
-	    	GroundLayout groundLayout = new GroundLayout();
-	    	WorldLayout worldLayout = new WorldLayout();
-	    	RunnerLayout runnerLayout = new RunnerLayout();
-	    	
-	        world = worldLayout.createWorld();
-	        ground = groundLayout.createGround(world);
-	        runner = runnerLayout.createRunner(world);
-	        
+	    	this.setupWorld();
+	    	this.setupCamera();
+	    	this.setupTouchControlAreas();
 	        renderer = new Box2DDebugRenderer();
-	        setupCamera();
+	    }
+	    
+	    private void setupWorld() {
+	        world = worldLayout.createWorld();
+	        this.setupGround();
+	        this.setupRunner();
+	    }
+	    
+	    private void setupGround() {
+	        ground = new Ground(groundLayout.createGround(world));
+	        this.addActor(ground);
+	    }
+
+	    private void setupRunner() {
+	        runner = new Runner(runnerLayout.createRunner(world));
+	        this.addActor(runner);
 	    }
 
 	    private void setupCamera() {
@@ -43,7 +73,33 @@ public class MainStage extends Stage {
 	        camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0f);
 	        camera.update();
 	    }
+	    
+	    private void setupTouchControlAreas() {
+	        touchPoint = new Vector3();
+	        screenRightSide = new Rectangle(getCamera().viewportWidth / 2, 0, getCamera().viewportWidth / 2, getCamera().viewportHeight);
+	        Gdx.input.setInputProcessor(this);
+	    }
+	    
+	    @Override
+	    public boolean touchDown(int x, int y, int pointer, int button) {
 
+	    this.translateScreenToWorldCoordinates(x, y);
+
+	        if (rightSideTouched(touchPoint.x, touchPoint.y)) {
+	            runner.jump();
+	        }
+	        return super.touchDown(x, y, pointer, button);
+	    }
+
+	    private boolean rightSideTouched(float x, float y) {
+	        return screenRightSide.contains(x, y);
+	    }
+
+	    
+	    private void translateScreenToWorldCoordinates(int x, int y) {
+	        this.getCamera().unproject(touchPoint.set(x, y, 0));
+	    }
+   
 	    @Override
 	    public void act(float delta) {
 	        super.act(delta);
@@ -55,13 +111,42 @@ public class MainStage extends Stage {
 	            world.step(TIME_STEP, 6, 2);
 	            accumulator -= TIME_STEP;
 	        }
-	        //TODO: Implement interpolation
 	    }
 
+	    /* Draw the scene with camera and world parameters */
 	    @Override
 	    public void draw() {
 	        super.draw();
 	        renderer.render(world, camera.combined);
 	    }
 
+		@Override
+		public void beginContact(Contact contact) {
+			Body a = contact.getFixtureA().getBody();
+	        Body b = contact.getFixtureB().getBody();
+	        
+	        BodyLayout bodyLayout = new BodyLayout();
+	        
+	        if ((bodyLayout.bodyIsRunner(a) && bodyLayout.bodyIsGround(b)) || (bodyLayout.bodyIsGround(a) && bodyLayout.bodyIsRunner(b))) {
+	            runner.landed();
+	        }
+		}
+
+		@Override
+		public void endContact(Contact contact) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void preSolve(Contact contact, Manifold oldManifold) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void postSolve(Contact contact, ContactImpulse impulse) {
+			// TODO Auto-generated method stub
+			
+		}
 }
