@@ -25,7 +25,7 @@ public class RunnerLayout {
         body.setGravityScale(Constants.RUNNER_GRAVITY_SCALE);
         body.createFixture(shape, Constants.RUNNER_DENSITY);
         body.resetMassData();
-        body.setUserData(new RunnerUserData());
+        body.setUserData(new RunnerUserData(Constants.RUNNER_WIDTH, Constants.RUNNER_HEIGHT));
         shape.dispose();
         
         return body;

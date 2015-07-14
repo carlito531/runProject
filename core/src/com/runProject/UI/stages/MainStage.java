@@ -12,10 +12,13 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Array;
 import com.runProject.UI.world.BodyLayout;
+import com.runProject.UI.world.EnemyLayout;
 import com.runProject.UI.world.GroundLayout;
 import com.runProject.UI.world.RunnerLayout;
 import com.runProject.UI.world.WorldLayout;
+import com.runProject.model.Enemy;
 import com.runProject.model.Ground;
 import com.runProject.model.Runner;
 
@@ -31,6 +34,8 @@ public class MainStage extends Stage implements ContactListener {
 	    WorldLayout worldLayout = null;
 	    GroundLayout groundLayout = null;
     	RunnerLayout runnerLayout = null;
+    	BodyLayout bodyLayout = null;
+    	EnemyLayout enemyLayout = null;
 
 	    private final float TIME_STEP = 1 / 300f;
 	    private float accumulator = 0f;
@@ -46,6 +51,8 @@ public class MainStage extends Stage implements ContactListener {
 	    	worldLayout = new WorldLayout();
 	 	    groundLayout = new GroundLayout();
 	     	runnerLayout = new RunnerLayout();
+	     	bodyLayout = new BodyLayout();
+	     	enemyLayout = new EnemyLayout();
 	    	
 	    	this.setupWorld();
 	    	this.setupCamera();
@@ -58,6 +65,7 @@ public class MainStage extends Stage implements ContactListener {
 	        world.setContactListener(this);
 	        this.setupGround();
 	        this.setupRunner();
+	        this.createEnemy();
 	    }
 	    
 	    private void setupGround() {
@@ -120,6 +128,13 @@ public class MainStage extends Stage implements ContactListener {
 	    @Override
 	    public void act(float delta) {
 	        super.act(delta);
+	        
+	        Array<Body> bodies = new Array<Body>(world.getBodyCount());
+	        world.getBodies(bodies);
+
+	        for (Body body : bodies) {
+	            update(body);
+	        }
 
 	        // Fixed timestep
 	        accumulator += delta;
@@ -128,6 +143,20 @@ public class MainStage extends Stage implements ContactListener {
 	            world.step(TIME_STEP, 6, 2);
 	            accumulator -= TIME_STEP;
 	        }
+	    }
+	    
+	    private void update(Body body) {
+	        if (!bodyLayout.bodyInBounds(body)) {
+	            if (bodyLayout.bodyIsEnemy(body) && !runner.isHit()) {
+	                createEnemy();
+	            }
+	            world.destroyBody(body);
+	        }
+	    }
+
+	    private void createEnemy() {
+	        Enemy enemy = new Enemy(enemyLayout.createEnemy(world));
+	        addActor(enemy);
 	    }
 
 	    /* Draw the scene with camera and world parameters */
@@ -139,14 +168,15 @@ public class MainStage extends Stage implements ContactListener {
 
 		@Override
 		public void beginContact(Contact contact) {
-			Body a = contact.getFixtureA().getBody();
-	        Body b = contact.getFixtureB().getBody();
-	        
-	        BodyLayout bodyLayout = new BodyLayout();
-	        
-	        if ((bodyLayout.bodyIsRunner(a) && bodyLayout.bodyIsGround(b)) || (bodyLayout.bodyIsGround(a) && bodyLayout.bodyIsRunner(b))) {
-	            runner.landed();
-	        }
+			 Body a = contact.getFixtureA().getBody();
+		     Body b = contact.getFixtureB().getBody();
+
+		        if ((bodyLayout.bodyIsRunner(a) && bodyLayout.bodyIsEnemy(b)) || (bodyLayout.bodyIsEnemy(a) && bodyLayout.bodyIsRunner(b))) {
+		            runner.hit();
+		        
+		        } else if ((bodyLayout.bodyIsRunner(a) && bodyLayout.bodyIsGround(b)) || (bodyLayout.bodyIsGround(a) && bodyLayout.bodyIsRunner(b))) {
+		            runner.landed();
+		        }
 		}
 
 		@Override
