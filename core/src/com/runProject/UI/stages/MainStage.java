@@ -13,19 +13,23 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.runProject.UI.world.BodyLayout;
 import com.runProject.UI.world.EnemyLayout;
 import com.runProject.UI.world.GroundLayout;
 import com.runProject.UI.world.RunnerLayout;
 import com.runProject.UI.world.WorldLayout;
+import com.runProject.common.Constants;
+import com.runProject.model.Background;
 import com.runProject.model.Enemy;
 import com.runProject.model.Ground;
 import com.runProject.model.Runner;
 
 public class MainStage extends Stage implements ContactListener {
 	
-	 	private static final int VIEWPORT_WIDTH = 20;
-	    private static final int VIEWPORT_HEIGHT = 13;
+	 	private static final int VIEWPORT_WIDTH = Constants.APP_WIDTH;
+	    private static final int VIEWPORT_HEIGHT = Constants.APP_HEIGHT;
 
 	    private World world;
 	    private Ground ground;
@@ -45,35 +49,35 @@ public class MainStage extends Stage implements ContactListener {
 	    private Vector3 touchPoint;
 	    
 	    private OrthographicCamera camera;
-	    private Box2DDebugRenderer renderer;
+	    //private Box2DDebugRenderer renderer;
 
 	    public MainStage() {
-	    	worldLayout = new WorldLayout();
-	 	    groundLayout = new GroundLayout();
-	     	runnerLayout = new RunnerLayout();
-	     	bodyLayout = new BodyLayout();
-	     	enemyLayout = new EnemyLayout();
+	    	super(new ScalingViewport(Scaling.stretch, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)));
 	    	
 	    	this.setupWorld();
 	    	this.setupCamera();
 	    	this.setupTouchControlAreas();
-	        renderer = new Box2DDebugRenderer();
+	        //renderer = new Box2DDebugRenderer();
 	    }
 	    
 	    private void setupWorld() {
+	    	worldLayout = new WorldLayout();
 	        world = worldLayout.createWorld();
 	        world.setContactListener(this);
+	        this.setupBackground();
 	        this.setupGround();
 	        this.setupRunner();
 	        this.createEnemy();
 	    }
 	    
 	    private void setupGround() {
+	    	groundLayout = new GroundLayout();
 	        ground = new Ground(groundLayout.createGround(world));
 	        this.addActor(ground);
 	    }
 
 	    private void setupRunner() {
+	    	runnerLayout = new RunnerLayout();
 	        runner = new Runner(runnerLayout.createRunner(world));
 	        this.addActor(runner);
 	    }
@@ -89,6 +93,10 @@ public class MainStage extends Stage implements ContactListener {
 	        screenRightSide = new Rectangle(getCamera().viewportWidth / 2, 0, getCamera().viewportWidth / 2, getCamera().viewportHeight);
 	        screenLeftSide = new Rectangle(0, 0, getCamera().viewportWidth / 2, getCamera().viewportHeight);
 	        Gdx.input.setInputProcessor(this);
+	    }
+	    
+	    private void setupBackground() {
+	       this.addActor(new Background());
 	    }
 	    
 	    @Override
@@ -146,6 +154,8 @@ public class MainStage extends Stage implements ContactListener {
 	    }
 	    
 	    private void update(Body body) {
+	    	bodyLayout = new BodyLayout();
+	    	
 	        if (!bodyLayout.bodyInBounds(body)) {
 	            if (bodyLayout.bodyIsEnemy(body) && !runner.isHit()) {
 	                createEnemy();
@@ -155,6 +165,7 @@ public class MainStage extends Stage implements ContactListener {
 	    }
 
 	    private void createEnemy() {
+	    	enemyLayout = new EnemyLayout();
 	        Enemy enemy = new Enemy(enemyLayout.createEnemy(world));
 	        addActor(enemy);
 	    }
@@ -163,7 +174,7 @@ public class MainStage extends Stage implements ContactListener {
 	    @Override
 	    public void draw() {
 	        super.draw();
-	        renderer.render(world, camera.combined);
+	        //renderer.render(world, camera.combined);
 	    }
 
 		@Override
