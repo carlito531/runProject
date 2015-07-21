@@ -5,11 +5,11 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.runProject.UI.stages.MainStage;
 
-public class MainLayout implements Screen {
+public class MainScreen implements Screen {
 
 	private MainStage mainStage = null;
 	
-	public MainLayout() {
+	public MainScreen() {
 		mainStage = new MainStage();
 	}
 	

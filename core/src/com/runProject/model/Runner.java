@@ -51,8 +51,7 @@ public class Runner extends GameActor {
             batch.draw(dodgingTexture, x, y + screenRectangle.height / 4, width, screenRectangle.height * 3 / 4);
         } else if (hit) {
             // When he's hit we also want to apply rotation if the body has been rotated
-            batch.draw(hitTexture, x, y, width * 0.5f, screenRectangle.height * 0.5f, width, screenRectangle.height, 1f,
-                    1f, (float) Math.toDegrees(body.getAngle()));
+            batch.draw(hitTexture, x, y, width * 0.5f, screenRectangle.height * 0.5f, width, screenRectangle.height, 1f, 1f, (float) Math.toDegrees(body.getAngle()));
         } else if (jumping) {
             batch.draw(jumpingTexture, x, y, width, screenRectangle.height);
         } else {
@@ -100,6 +99,7 @@ public class Runner extends GameActor {
     public void hit() {
         body.applyAngularImpulse(((RunnerUserData) getUserData()).getHitAngularImpulse(), true);
         hit = true;
+        Gdx.app.exit();
     }
 
     public boolean isHit() {
